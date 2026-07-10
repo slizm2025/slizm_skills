@@ -1,143 +1,140 @@
 ---
 name: tech-doc-implementation
-description: Strictly implement project code from a technical document. Use whenever the user asks to implement, refactor, extend, or modify code according to a technical document, design doc, requirements spec, API spec, architecture doc, product doc, or implementation plan. Before each implementation unit, evaluate whether the document's requirement is compatible with the current project, reasonable, and unambiguous; ask the user before coding if there is conflict, ambiguity, missing context, or risky impact.
+description: Implement, refactor, extend, or modify project code from a technical document, design document, requirements specification, API specification, architecture document, product document, or implementation plan. Use when the user asks Codex to perform the documented code changes, not when they only want a document drafted or reviewed. Reconcile the document with the current project, trace every normative requirement to code and validation, make the smallest compatible change set, and ask only when an unresolved choice would materially change behavior, contracts, data, security, or delivery risk.
 ---
 
-# Skill: tech-doc-implementation
+# Implement code from a technical document
 
-Use this skill when the user wants code implemented according to a technical document or specification.
+Treat the document as the target and the current project as the implementation constraint. Preserve unrelated user changes and existing behavior outside the documented scope.
 
-The goal is not merely to write code, but to ensure each implementation decision is compatible with the existing project and faithful to the document.
+## Required outcome
 
-## Core principles
+Complete the task only when:
 
-1. Treat the technical document as the primary source of requirements.
-2. Treat the existing project as the source of architectural, stylistic, and compatibility constraints.
-3. Do not invent requirements, change public behavior, add unrelated features, or perform opportunistic refactors.
-4. Before implementing each meaningful unit, evaluate compatibility, correctness, reasonableness, and ambiguity.
-5. If the document and project conflict, or the requirement is unclear, ask the user before coding.
+- every normative document requirement is implemented, explicitly out of scope, or blocked with a stated reason;
+- every changed file and behavior maps to at least one document requirement;
+- relevant validation has run, or its absence and resulting confidence limit are reported;
+- no unresolved material ambiguity is hidden behind an implementation choice.
 
-## When to pause and ask
+## Decision rule
 
-Pause implementation and ask the user when any of the following is true:
+Resolve ordinary implementation choices from established project conventions. Ask the user only when the remaining alternatives would materially change one or more of:
 
-- The technical document is ambiguous, incomplete, or internally inconsistent.
-- The document conflicts with existing project architecture, APIs, data models, dependencies, or behavior.
-- Multiple implementation approaches are plausible and the document does not indicate a preferred one.
-- The change may affect existing public interfaces, persisted data, permissions, authentication, billing, security, or compatibility.
-- A new dependency, migration, breaking change, or architectural adjustment appears necessary.
-- The existing project lacks required context or foundation for the documented requirement.
-- The documented requirement appears unreasonable, unsafe, or inconsistent with the rest of the system.
+- observable product behavior or acceptance results;
+- public APIs, persisted data, permissions, authentication, billing, or security posture;
+- dependency policy, migration strategy, cross-module ownership, or backward compatibility;
+- the documented scope or a requirement's meaning.
 
-Do not silently choose a risky interpretation.
+When asking, state the conflicting evidence, affected requirements, available choices, and practical consequence of each choice. Group related blockers into one focused question.
 
 ## Workflow
 
-### 1. Understand the document
+### 1. Establish the implementation baseline
 
-Read the provided technical document and extract:
+Read every document and explicit user supplement that defines the requested change. Record internally:
 
-- Functional goals
-- Required modules, APIs, components, data structures, flows, and edge cases
-- Non-functional constraints, such as performance, compatibility, security, or dependency limits
-- Explicit implementation requirements
-- Open questions or possible ambiguities
+- source path or conversation source and available version identifier;
+- requested project or module scope;
+- available branch, commit, tag, or analysis timestamp;
+- each normative requirement as `REQ-001`, `REQ-002`, and so on;
+- explicit exclusions, invariants, acceptance criteria, conflicts, and unknowns.
 
-If the document is not available or insufficient, ask for it.
+Distinguish document requirements from examples, commentary, current-state descriptions, and inferred engineering preferences.
 
-### 2. Inspect the current project
+This step is complete when every normative statement is represented by a requirement ID or recorded as an unresolved blocker.
 
-Before coding, inspect the relevant project files to understand:
+### 2. Verify project fit and inspect the implementation
 
-- Tech stack and framework conventions
-- Directory structure
-- Existing related modules
-- Existing types, interfaces, utilities, services, hooks, components, tests, and configuration
-- Naming, error handling, validation, logging, and testing patterns
+Confirm that the requested workspace is the project described by the document using decisive evidence or multiple independent strong signals. Then inspect only the code needed to establish:
 
-Prefer reusing existing patterns over introducing new ones.
+- active entry points and current observable behavior;
+- owning modules, symbols, schemas, configuration, generated sources, and dependencies;
+- existing architecture, naming, validation, error handling, logging, and test conventions;
+- user-owned or unrelated worktree changes that must remain untouched.
 
-### 3. Split the work into implementation units
+Treat runtime code, declarative configuration, schemas, generators, infrastructure definitions, and tests as possible authoritative implementation sources. Treat README files, comments, examples, and historical documents as supporting evidence.
 
-Break the document into small implementation units, such as:
+Stop when project identity cannot be established or required implementation sources are missing. Explain what was found, what is missing, and which requirements cannot be implemented safely.
 
-- API endpoint
-- service method
-- data model
-- UI component
-- state management change
-- configuration change
-- validation rule
-- test case
+This step is complete when every requirement has enough current-project evidence to choose an implementation location or has a precise blocker.
 
-Do not make broad unrelated changes in one step.
+### 3. Build the implementation trace
 
-### 4. Evaluate before each unit
+Split the work into reviewable implementation units. Maintain an internal trace:
 
-Before implementing each unit, briefly assess:
+| Unit | Requirements | Current evidence | Planned files/symbols | Validation | Status |
+|---|---|---|---|---|---|
+
+Each unit must have:
+
+- one coherent behavior or contract change;
+- at least one requirement ID;
+- evidence for the chosen project location;
+- a validation method proportional to its risk.
+
+Keep units scoped to required behavior and follow existing project seams.
+
+This step is complete when every requirement is covered by at least one unit and every unit is justified by a requirement.
+
+### 4. Gate and implement each unit
+
+Before editing a unit, verify internally:
+
+- the requirement is unambiguous enough to implement;
+- the proposed location and dependency direction match the project;
+- the change preserves out-of-scope behavior;
+- any public contract, data, security, migration, or dependency impact is authorized;
+- the planned validation can detect the intended behavior.
+
+Proceed autonomously when project conventions resolve non-material choices. Pause under the decision rule when they do not.
+
+During implementation:
+
+- modify only files required by traced units;
+- reuse established types, utilities, services, components, and conventions;
+- keep current-state and target-state assumptions visible in code and tests;
+- update tests and generated or declarative sources at their authoritative layer;
+- preserve unrelated user changes and avoid broad mechanical rewrites.
+
+A unit is complete only when its code change and validation coverage match all mapped requirements.
+
+### 5. Validate from narrow to broad
+
+Run the strongest relevant checks available, starting with the smallest signal that exercises the change:
+
+1. targeted tests or focused reproduction;
+2. affected type checking, linting, schema, or static validation;
+3. broader tests or build when proportionate to the change and practical.
+
+If a check fails, determine whether the failure comes from the implementation, the documented requirement, the environment, or a pre-existing condition. Fix in-scope implementation failures. Report environmental and pre-existing failures with evidence rather than masking them.
+
+Validation is complete when every implementation unit has a result or an explicit unvalidated boundary.
+
+### 6. Perform the final trace audit
+
+Before reporting completion, confirm:
+
+- every `REQ-nnn` is implemented, excluded by the source, or explicitly blocked;
+- every modified file belongs to a traced unit;
+- tests and validation assertions reflect the document rather than invented requirements;
+- no project, document, or code baseline changed in a way that invalidates the analysis;
+- the working tree contains no accidental files or unrelated modifications created by the task.
+
+If the document or relevant code changed during implementation, refresh the affected trace and validation before completion.
+
+## Final report
+
+Report concisely:
 
 ```text
-Implementation unit:
-- Document requirement:
-- Existing project context:
-- Proposed approach:
-- Compatibility:
-- Correctness and maintainability:
-- Risks or ambiguity:
-- Decision:
-```
-
-If there are no blocking issues, proceed with implementation.
-
-If there are blocking issues, ask the user a focused question and wait.
-
-### 5. Implement strictly
-
-When implementing:
-
-- Follow the document exactly.
-- Match surrounding code style, naming, structure, abstraction level, and comment density.
-- Reuse existing utilities, types, services, and conventions.
-- Avoid unrelated refactors.
-- Avoid unnecessary dependencies.
-- Keep changes focused and reviewable.
-- Update tests when the project has relevant test patterns.
-- Do not claim behavior is implemented unless the code actually does it.
-
-### 6. Validate
-
-After implementation, run the most relevant available checks, such as:
-
-- Unit tests
-- Type checking
-- Linting
-- Build
-- Existing project-specific validation commands
-
-If commands are unavailable or cannot be run, say so clearly.
-
-If validation fails, report the failure honestly with the relevant output or summary.
-
-### 7. Final report
-
-End with a concise implementation summary:
-
-```text
-Summary:
-- Implemented:
+Implementation result:
+- Document baseline:
+- Code baseline:
+- Requirements implemented:
+- Requirements blocked or excluded:
 - Modified files:
-- Document requirements covered:
-- Validation performed:
-- Validation result:
-- Known limitations or follow-up questions:
+- Validation performed and results:
+- Unvalidated boundaries or known limitations:
 ```
 
-## Output style
-
-Be concise but explicit.
-
-Before coding, provide enough analysis to show that the technical document and current project have been compared.
-
-During implementation, do not over-explain obvious code changes.
-
-When asking questions, ask only what is necessary to unblock a correct implementation.
+Claim only behavior demonstrated by the resulting code and available validation.
