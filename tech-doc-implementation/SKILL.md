@@ -1,6 +1,6 @@
 ---
 name: tech-doc-implementation
-description: Implement, refactor, extend, or modify project code from a technical document, design document, requirements specification, API specification, architecture document, product document, or implementation plan. Use when the user asks Codex to perform the documented code changes, not when they only want a document drafted or reviewed. Reconcile the document with the current project, trace every normative requirement to code and validation, make the smallest compatible change set, and ask only when an unresolved choice would materially change behavior, contracts, data, security, or delivery risk.
+description: Implement, refactor, extend, or modify project code from a technical document, design document, requirements specification, API specification, architecture document, product document, or implementation plan. Use when the user asks the agent to perform the documented code changes, not when they only want a document drafted or reviewed. When both a technical design and a requirements document exist, treat the technical design as the primary implementation source. Reconcile the document with the current project, trace every normative requirement to code and validation, make the smallest compatible change set, and ask only when an unresolved choice would materially change behavior, contracts, data, security, or delivery risk.
 ---
 
 # Implement code from a technical document
@@ -34,9 +34,10 @@ When asking, state the conflicting evidence, affected requirements, available ch
 Read every document and explicit user supplement that defines the requested change. Record internally:
 
 - source path or conversation source and available version identifier;
+- the document's handoff header when present (document ID, revision, review status such as PASS, draft, or "independent review not executed", upstream baselines); a draft or restricted status limits the completion claim in the final report accordingly;
 - requested project or module scope;
 - available branch, commit, tag, or analysis timestamp;
-- each normative requirement as `REQ-001`, `REQ-002`, and so on;
+- each normative requirement: reuse requirement IDs already present in the document (e.g. `REQ-nnn`) verbatim; assign new IDs only to normative statements that lack one, recording their document location;
 - explicit exclusions, invariants, acceptance criteria, conflicts, and unknowns.
 
 Distinguish document requirements from examples, commentary, current-state descriptions, and inferred engineering preferences.
@@ -60,7 +61,7 @@ This step is complete when every requirement has enough current-project evidence
 
 ### 3. Build the implementation trace
 
-Split the work into reviewable implementation units. Maintain an internal trace:
+Split the work into reviewable implementation units. When the document provides a planned file list, requirement trace, or validation targets, import them as the initial trace instead of rebuilding from scratch, and record every deviation from that plan (added, omitted, or relocated files) with its reason. Maintain an internal trace:
 
 | Unit | Requirements | Current evidence | Planned files/symbols | Validation | Status |
 |---|---|---|---|---|---|
@@ -129,10 +130,12 @@ Report concisely:
 ```text
 Implementation result:
 - Document baseline:
+- Document review status and resulting confidence limit:
 - Code baseline:
 - Requirements implemented:
 - Requirements blocked or excluded:
 - Modified files:
+- Deviation from documented plan: planned vs actually changed files, with a reason per addition, omission, or relocation (or "no planned file list in source document")
 - Validation performed and results:
 - Unvalidated boundaries or known limitations:
 ```
