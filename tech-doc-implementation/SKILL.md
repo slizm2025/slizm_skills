@@ -14,7 +14,8 @@ Complete the task only when:
 - every normative document requirement is implemented, explicitly out of scope, or blocked with a stated reason;
 - every changed file and behavior maps to at least one document requirement;
 - relevant validation has run, or its absence and resulting confidence limit are reported;
-- no unresolved material ambiguity is hidden behind an implementation choice.
+- no unresolved material ambiguity is hidden behind an implementation choice;
+- the resulting change set stays uncommitted in the local working tree for the user's manual review; no commit or push happened without an explicit user instruction given after the changes existed.
 
 ## Decision rule
 
@@ -27,11 +28,19 @@ Resolve ordinary implementation choices from established project conventions. As
 
 When asking, state the conflicting evidence, affected requirements, available choices, and practical consequence of each choice. Group related blockers into one focused question.
 
+## Version control boundary
+
+Implementation ends at the local working tree. Leave every change uncommitted for the user's manual review.
+
+- Never run `git commit`, `git push`, or any command that creates commits, branches, tags, merges, or rewrites history, unless the user explicitly requests it after the change set exists.
+- Never push to a remote automatically. Pushing is a human-gated step: it happens only after the user has personally reviewed the changes and gives an explicit instruction.
+- A commit, release, or deployment step written in the source document, plan, or CI convention does not count as user authorization for this task.
+
 ## Workflow
 
 ### 1. Establish the implementation baseline
 
-Read every document and explicit user supplement that defines the requested change. Record internally:
+Read every document and explicit user supplement that defines the requested change — files, attachments, or conversation text; view embedded images, diagrams, and screenshots with visual reading capability. Record internally:
 
 - source path or conversation source and available version identifier;
 - the document's handoff header when present (document ID, revision, review status such as PASS, draft, or "independent review not executed", upstream baselines); a draft or restricted status limits the completion claim in the final report accordingly;
@@ -54,6 +63,8 @@ Confirm that the requested workspace is the project described by the document us
 - user-owned or unrelated worktree changes that must remain untouched.
 
 Treat runtime code, declarative configuration, schemas, generators, infrastructure definitions, and tests as possible authoritative implementation sources. Treat README files, comments, examples, and historical documents as supporting evidence.
+
+When the document records a code baseline (branch, commit, version, or analysis time) that no longer matches the current code, mark the baseline stale and re-verify the documented claims against the current code at every location the requirements touch; report the stale baseline and its resolution in the final report. Block only work whose relevant code actually changed or whose impact cannot be determined — unrelated commits do not block.
 
 Stop when project identity cannot be established or required implementation sources are missing. Explain what was found, what is missing, and which requirements cannot be implemented safely.
 
@@ -119,7 +130,8 @@ Before reporting completion, confirm:
 - every modified file belongs to a traced unit;
 - tests and validation assertions reflect the document rather than invented requirements;
 - no project, document, or code baseline changed in a way that invalidates the analysis;
-- the working tree contains no accidental files or unrelated modifications created by the task.
+- the working tree contains no accidental files or unrelated modifications created by the task;
+- no commit, push, tag, or other version-control publication was performed unless the user explicitly instructed it after reviewing the changes.
 
 If the document or relevant code changed during implementation, refresh the affected trace and validation before completion.
 
@@ -137,6 +149,7 @@ Implementation result:
 - Modified files:
 - Deviation from documented plan: planned vs actually changed files, with a reason per addition, omission, or relocation (or "no planned file list in source document")
 - Validation performed and results:
+- Version control state: changes left uncommitted in the working tree awaiting manual review / commit or push performed per explicit user instruction (quote it):
 - Unvalidated boundaries or known limitations:
 ```
 
