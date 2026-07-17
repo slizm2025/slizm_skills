@@ -1,0 +1,17 @@
+{
+  "skill_name": "slizm-requirements-doc-from-code",
+  "evals": [
+    {"id": 1, "category": "task", "prompt": "根据我在对话中给出的原始需求和当前仓库代码，生成一份业务需求文档。需求里没有编号，也没有已有 PRD。", "expected_output": "独立登记原始需求与代码证据，只给无编号规范性陈述分配 REQ-nnn，输出需求文档而非技术设计；完成作者自检且无阻断时为 FINAL，不自动启动审查 agent。", "files": []},
+    {"id": 2, "category": "task", "prompt": "核验现有 PRD 与当前实现是否一致。PRD 已包含 R-17、REQ-042 和文档版本 3.2，请补全缺失内容但保留现有编号和元数据。", "expected_output": "保留 R-17、REQ-042、版本 3.2，核验而非重建编号；只为其他无编号规范性陈述分配未占用 REQ，保持需求事实、代码事实、文档整理和待确认项分离。", "files": []},
+    {"id": 3, "category": "task", "prompt": "请结合这份支付产品需求写需求文档，但当前工作区实际是一个图片压缩 CLI，二者没有共同标识或契约。", "expected_output": "识别项目不匹配，返回 NEEDS_INPUT；列出已确认身份、缺失或冲突证据和需要的正确代码范围，不继续包装成需求文档。", "files": []},
+    {"id": 4, "category": "task", "prompt": "生成最终需求文档。完成后不要自动启动任何审查子 agent；是否审查我会自己决定。", "expected_output": "完成来源核验、代码取证、追溯和作者自检后直接交付 FINAL；不启动、不等待审查 agent，也不因未审查降级为 DRAFT。", "files": []},
+    {"id": 5, "category": "task", "prompt": "已有一份需求说明和两份后续补充。用户明确说补充二只替换原文中的一个字段，其余内容继续有效。结合代码整理 PRD。", "expected_output": "分别登记来源，保留部分替换关系与有效片段，不按时间自动覆盖；生成 SRC → REQ → 验收 → 代码现状追溯。", "files": []},
+    {"id": 6, "category": "trigger", "prompt": "结合当前代码把这批原始需求整理成 PRD。", "should_trigger": true, "expected_output": "只触发 slizm-requirements-doc-from-code。", "files": []},
+    {"id": 7, "category": "trigger", "prompt": "根据这份需求和当前代码出一份详细技术设计及预计修改文件。", "should_trigger": false, "expected_output": "不触发本 skill；该请求属于技术设计。", "files": []},
+    {"id": 8, "category": "trigger", "prompt": "按这份 PRD 直接修改代码并运行测试。", "should_trigger": false, "expected_output": "不触发本 skill；该请求属于代码实施。", "files": []},
+    {"id": 9, "category": "codegraph", "prompt": "目标业务项目根目录存在 .codegraph，宿主提供 codegraph_explore。结合需求核验当前行为并写 PRD。", "expected_output": "首次代码探索使用 codegraph_explore，查询入口到结果的语义路径，再核验关键源码；记录 used-mcp。CodeGraph 发现的行为只进入当前现状，不生成新目标、保持不变项或验收。", "files": []},
+    {"id": 10, "category": "codegraph", "prompt": "目标业务项目没有 .codegraph。结合需求和代码写需求文档。", "expected_output": "不调用任何 CodeGraph 能力且不执行 codegraph init；记录 not-indexed，使用普通搜索和直接读取完成代码事实取证。", "files": []},
+    {"id": 11, "category": "codegraph", "prompt": "目标项目有 .codegraph，但 codegraph_explore 不可用，codegraph explore CLI 可用。核验需求与实现。", "expected_output": "自动切换到 codegraph explore CLI，记录 used-cli；只对 CLI 未覆盖内容使用直接读取或普通搜索。", "files": []},
+    {"id": 12, "category": "codegraph", "prompt": "CodeGraph 返回的调用关系与当前源文件不一致。根据当前代码补全需求文档。", "expected_output": "以直接读取的当前源码为准，把相关索引标记 stale-partial 或 stale-global，不用旧关系支撑结论，并在证据边界披露。", "files": []}
+  ]
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "代码需求文档"
+  short_description: "结合原始需求与当前代码生成、补全或核验业务需求文档"
+  default_prompt: "使用 $slizm-requirements-doc-from-code，根据这些需求材料和当前代码生成或核验需求文档。"

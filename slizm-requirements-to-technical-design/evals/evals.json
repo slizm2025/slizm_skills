@@ -1,0 +1,17 @@
+{
+  "skill_name": "slizm-requirements-to-technical-design",
+  "evals": [
+    {"id": 1, "category": "task", "prompt": "根据这份正式需求文档和当前代码生成技术设计。文档中已有 REQ-007、REQ-012 和版本元数据。", "expected_output": "保留需求编号与可选元数据，核验当前代码，为每个技术决定分配 DES，并生成 REQ → DES → 代码证据 → 文件 → 验证追溯。", "files": []},
+    {"id": 2, "category": "task", "prompt": "没有正式 PRD，只有我在对话中给出的原始需求和一张流程图。请直接结合当前项目出技术设计。", "expected_output": "把原始材料作为独立有效输入，自行建立需求与代码基线；不要求先运行需求文档 skill，完成作者自检且证据充分时返回 READY。", "files": []},
+    {"id": 3, "category": "task", "prompt": "更新现有技术设计。保留仍有效的 DES-003 和 DES-008，新需求没有编号，当前代码已有少量相关变化。", "expected_output": "核验旧基线，保留含义未变的 DES，给无编号需求分配 REQ，给新决定分配未占用 DES，并说明新增、修改、废弃设计及文件清单变化。", "files": []},
+    {"id": 4, "category": "task", "prompt": "需求涉及订单持久化迁移，但工作区缺少数据库 schema、迁移目录和持久化模块。请出可实施技术设计。", "expected_output": "识别关键代码缺失，返回 NEEDS_INPUT；说明已确认事实、缺失证据、受影响 REQ/DES 和需要补充的位置，不猜测文件或契约。", "files": []},
+    {"id": 5, "category": "task", "prompt": "完成技术设计。完成后不要自动启动审查子 agent；如需审查我会另开一个 agent。", "expected_output": "完成需求覆盖、代码取证、影响分析、追溯和作者自检后直接交付 READY；不启动或等待审查 agent，也不因未审查降级为 LIMITED。", "files": []},
+    {"id": 6, "category": "trigger", "prompt": "结合这份需求和当前代码给出详细设计、DES 编号和预计变更文件。", "should_trigger": true, "expected_output": "只触发 slizm-requirements-to-technical-design。", "files": []},
+    {"id": 7, "category": "trigger", "prompt": "根据原始需求和现有实现补全业务 PRD，不要技术方案。", "should_trigger": false, "expected_output": "不触发本 skill；该请求属于需求文档。", "files": []},
+    {"id": 8, "category": "trigger", "prompt": "implement this design，修改代码并跑测试。", "should_trigger": false, "expected_output": "不触发本 skill；该请求属于代码实施。", "files": []},
+    {"id": 9, "category": "codegraph", "prompt": "目标项目已有 .codegraph 且 codegraph_explore 可用。为 REQ-101 设计修改文件和验证。", "expected_output": "首次代码探索使用 codegraph_explore；为 REQ-101 查询入口、调用链、实现、数据、复用点、测试和消费者，核验候选源码并让每个计划文件具有语义依据。", "files": []},
+    {"id": 10, "category": "codegraph", "prompt": "目标项目没有 .codegraph。根据需求和当前代码生成技术设计。", "expected_output": "不调用 CodeGraph 且不执行 codegraph init；记录 not-indexed，用普通搜索和直接读取建立等价语义证据，设计能力不降级。", "files": []},
+    {"id": 11, "category": "codegraph", "prompt": "目标项目有索引，MCP 查询失败但 codegraph explore CLI 可用。给出技术设计。", "expected_output": "自动使用 CLI 并记录 used-cli；通过 CLI 与源码核验形成 REQ → DES → 文件 → 影响面 → 验证映射。", "files": []},
+    {"id": 12, "category": "codegraph", "prompt": "设计过程中发现必须修改原文件清单之外的公共接口，且增量索引显示 stale。", "expected_output": "重新探索公共接口的调用者和实现；对过期范围直接读取并记录 stale-partial，刷新影响面和文件清单后再完成设计。", "files": []}
+  ]
+}

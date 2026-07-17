@@ -1,0 +1,18 @@
+{
+  "skill_name": "tech-doc-implementation",
+  "evals": [
+    {"id": 1, "category": "task", "prompt": "只有一份技术设计，没有 PRD。请按其中的 DES-001 和 DES-002 修改当前项目并验证。", "expected_output": "独立接受技术设计，保留 DES 编号并标记内容类型；核验其实现约束与当前代码，实施、验证并按结果返回 SUCCESS、PARTIAL 或 BLOCKED。", "files": []},
+    {"id": 2, "category": "task", "prompt": "只有一份 PRD，没有技术设计。PRD 含 REQ-010 和三条无编号验收规则，请直接修改代码。", "expected_output": "独立接受 PRD，保留 REQ-010，只给无编号规范性内容分配 DOC-nnn 并标记内容类型；从当前代码惯例选择非实质实现方式。", "files": []},
+    {"id": 3, "category": "task", "prompt": "PRD 要求接口返回 201，API 规格要求同一路径返回 202，技术设计没有解释差异。请实现。", "expected_output": "识别行为与契约的实质冲突，返回 BLOCKED；列出受影响编号、冲突证据、可选解释和后果，询问用户而不静默选边。", "files": []},
+    {"id": 4, "category": "task", "prompt": "按这份实施文档改代码。工作区已经有用户未提交的修改，其中一部分与目标文件重叠。", "expected_output": "先识别并保留用户修改，在重叠文件中协同编辑，不回滚或覆盖无关内容；最终默认保留未提交状态并报告边界。", "files": []},
+    {"id": 5, "category": "task", "prompt": "按设计实现、验证，然后 commit 这些改动；不要 push。", "expected_output": "把当前对话中的 commit 指令视为授权，核对范围后提交；不得要求修改完成后再次授权，不得 push，并在结果中报告提交状态。", "files": []},
+    {"id": 6, "category": "trigger", "prompt": "按这份技术方案实现功能，修改代码并完成测试。", "should_trigger": true, "expected_output": "只触发 tech-doc-implementation。", "files": []},
+    {"id": 7, "category": "trigger", "prompt": "结合当前代码写一份需求文档，不修改代码。", "should_trigger": false, "expected_output": "不触发本 skill；该请求属于需求文档。", "files": []},
+    {"id": 8, "category": "trigger", "prompt": "根据需求出技术设计和预计文件清单，但先不要实施。", "should_trigger": false, "expected_output": "不触发本 skill；该请求属于技术设计。", "files": []},
+    {"id": 9, "category": "codegraph", "prompt": "目标项目有 .codegraph 且 codegraph_explore 可用。按设计修改一个服务方法并验证。", "expected_output": "编辑前首先用 codegraph_explore 核验目标符号、调用者、被调用者、接口实现和测试；编辑后重新审计关键符号影响面，再运行独立测试和静态检查。", "files": []},
+    {"id": 10, "category": "codegraph", "prompt": "目标项目没有 .codegraph。按 PRD 修改代码并运行测试。", "expected_output": "不调用 CodeGraph 且不执行 codegraph init；记录 not-indexed，用 rg 和直接读取完成编辑前上下文及编辑后影响审计，并正常实施验证。", "files": []},
+    {"id": 11, "category": "codegraph", "prompt": "目标项目有索引，codegraph_explore 不可用但 codegraph explore CLI 可用。按技术设计实施。", "expected_output": "自动使用 CLI，记录 used-cli；用 CLI 建立编辑前语义证据和修改后影响面，源码与测试仍独立核验。", "files": []},
+    {"id": 12, "category": "codegraph", "prompt": "修改完成后增量索引仍未同步，CodeGraph 返回旧调用关系，但源文件和测试可读。", "expected_output": "不使用旧关系；记录 stale-partial 或 stale-global，直接读取修改符号和消费者完成可确认审计，运行项目验证，并在最终报告披露修改后 CodeGraph 限制。", "files": []},
+    {"id": 13, "category": "task", "prompt": "按设计完成实现和验证。完成后不要自动启动审查子 agent；是否审查我会自己决定。", "expected_output": "完成影响面审计、验证和最终追溯后直接返回 SUCCESS、PARTIAL 或 BLOCKED；不启动、不等待任何审查 agent，说明后续审查由使用者另行决定。", "files": []}
+  ]
+}

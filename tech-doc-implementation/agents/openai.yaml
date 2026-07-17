@@ -1,0 +1,4 @@
+interface:
+  display_name: "规范文档实施"
+  short_description: "依据需求、设计或契约文档修改项目代码并完成完整验证与报告"
+  default_prompt: "使用 $tech-doc-implementation，按这些规范性文档修改当前项目代码并完成验证。"

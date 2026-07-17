@@ -1,0 +1,4 @@
+interface:
+  display_name: "需求技术设计"
+  short_description: "结合需求材料与当前代码生成、更新或核验可实施的技术设计"
+  default_prompt: "使用 $slizm-requirements-to-technical-design，根据这些需求材料和当前代码生成可实施的技术设计。"

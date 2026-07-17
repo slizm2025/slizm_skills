@@ -1,156 +1,129 @@
 ---
 name: tech-doc-implementation
-description: Implement, refactor, extend, or modify project code from a technical document, design document, requirements specification, API specification, architecture document, product document, or implementation plan. Use when the user asks the agent to perform the documented code changes, not when they only want a document drafted or reviewed. When both a technical design and a requirements document exist, treat the technical design as the primary implementation source. Reconcile the document with the current project, trace every normative requirement to code and validation, make the smallest compatible change set, and ask only when an unresolved choice would materially change behavior, contracts, data, security, or delivery risk.
+description: 根据技术设计、需求文档、PRD、API 规格、架构文档或实施计划修改项目代码并完成验证。用于“按技术方案实现”“根据 PRD 改代码”“implement this design”等明确实施请求；可独立使用，不用于只编写或评审文档。
 ---
 
-# Implement code from a technical document
+# 根据规范性文档实施代码
 
-Treat the document as the target and the current project as the implementation constraint. Preserve unrelated user changes and existing behavior outside the documented scope.
+把文档中的规范性内容作为目标，把当前项目作为实现约束。保留范围外行为和用户已有改动。
 
-## Required outcome
+## 结果状态
 
-Complete the task only when:
+- `SUCCESS`：全部范围内规范性内容已实施或明确排除，语义影响审计和相关验证完成，没有核心阻塞。
+- `PARTIAL`：已完成可安全交付的子集，但仍有非核心范围、环境、语义审计或验证限制；必须列出未完成项。
+- `BLOCKED`：跨层材料实质冲突、项目不匹配、关键实现缺失或核心要求存在未决选择，无法安全继续。
 
-- every normative document requirement is implemented, explicitly out of scope, or blocked with a stated reason;
-- every changed file and behavior maps to at least one document requirement;
-- relevant validation has run, or its absence and resulting confidence limit are reported;
-- no unresolved material ambiguity is hidden behind an implementation choice;
-- the resulting change set stays uncommitted in the local working tree for the user's manual review; no commit or push happened without an explicit user instruction given after the changes existed.
+存在核心阻塞时使用 `BLOCKED`，不得用文件数量、局部成功或单一验证掩盖未完成的核心要求。
 
-## Decision rule
+## 输入与内容权威
 
-Resolve ordinary implementation choices from established project conventions. Ask the user only when the remaining alternatives would materially change one or more of:
+接受任何含规范性内容的实施输入，不要求来自其他 skill：技术设计、需求文档、PRD、API 规格、schema、架构文档、实施计划、附件或用户对话。完整读取用户明确用于补充、修正、撤回或解释范围的材料。
 
-- observable product behavior or acceptance results;
-- public APIs, persisted data, permissions, authentication, billing, or security posture;
-- dependency policy, migration strategy, cross-module ownership, or backward compatibility;
-- the documented scope or a requirement's meaning.
+需求和验收控制可观察行为；API、协议和 schema 控制契约；技术设计和架构决定控制实现方式；当前实际生效的代码、配置、生成来源和测试证明现状。跨层材料发生实质冲突时转为 `BLOCKED` 并询问用户，不静默选边。
 
-When asking, state the conflicting evidence, affected requirements, available choices, and practical consequence of each choice. Group related blockers into one focused question.
+## 编号规则
 
-## Version control boundary
+- 原样保留 `REQ`、`DES`、`AC`、`API` 及其他稳定编号；
+- 仅给没有稳定编号的规范性内容分配未占用的 `DOC-nnn`，并记录来源位置和内容类型；
+- 示例、背景、代码现状和作者建议不分配规范性编号。
 
-Implementation ends at the local working tree. Leave every change uncommitted for the user's manual review.
+## 版本控制边界
 
-- Never run `git commit`, `git push`, or any command that creates commits, branches, tags, merges, or rewrites history, unless the user explicitly requests it after the change set exists.
-- Never push to a remote automatically. Pushing is a human-gated step: it happens only after the user has personally reviewed the changes and gives an explicit instruction.
-- A commit, release, or deployment step written in the source document, plan, or CI convention does not count as user authorization for this task.
+默认把修改留在未提交工作区供用户检查。用户在当前对话中直接要求 commit 或 push，即构成对应操作的授权。文档、计划、注释或 CI 中写有发布步骤不构成授权。
 
-## Workflow
+## CodeGraph 代码路由
 
-### 1. Establish the implementation baseline
+需要理解、定位或修改代码时，在首次代码搜索或源码读取前完整读取并执行 [CodeGraph 代码取证协议](references/codegraph-integration.md)。确认目标业务项目根目录并检查其 `.codegraph/`：存在时执行 CodeGraph-first；不存在或能力不可用时记录状态并使用普通搜索和直接读取。CodeGraph 负责语义发现与影响审计，不能替代源码核验、编译、测试、静态检查或运行验证。
 
-Read every document and explicit user supplement that defines the requested change — files, attachments, or conversation text; view embedded images, diagrams, and screenshots with visual reading capability. Record internally:
+## 工作流
 
-- source path or conversation source and available version identifier;
-- the document's handoff header when present (document ID, revision, review status such as PASS, draft, or "independent review not executed", upstream baselines); a draft or restricted status limits the completion claim in the final report accordingly;
-- requested project or module scope;
-- available branch, commit, tag, or analysis timestamp;
-- each normative requirement: reuse requirement IDs already present in the document (e.g. `REQ-nnn`) verbatim; assign new IDs only to normative statements that lack one, recording their document location;
-- explicit exclusions, invariants, acceptance criteria, conflicts, and unknowns.
+### 1. 建立实施基线
 
-Distinguish document requirements from examples, commentary, current-state descriptions, and inferred engineering preferences.
+读取全部规范性材料、用户补充和可用元数据；查看嵌入图片、图表和截图。记录来源、版本、项目范围、分支或 commit、显式排除项、验收标准、冲突和未知项。应用编号规则并记录内容类型。
 
-This step is complete when every normative statement is represented by a requirement ID or recorded as an unresolved blocker.
+本步骤完成条件：每项规范性内容都有稳定编号、类型和来源，或已登记为精确阻断项。
 
-### 2. Verify project fit and inspect the implementation
+### 2. 核验项目与实际实现
 
-Confirm that the requested workspace is the project described by the document using decisive evidence or multiple independent strong signals. Then inspect only the code needed to establish:
+用决定性证据或多个独立强信号确认项目匹配。检查目标项目根目录 `.codegraph/`，记录当前分支、commit、索引路由状态和新鲜度；导入文档中的文件与符号清单，并用 CodeGraph 或降级取证核验落点仍存在且职责未改变。
 
-- active entry points and current observable behavior;
-- owning modules, symbols, schemas, configuration, generated sources, and dependencies;
-- existing architecture, naming, validation, error handling, logging, and test conventions;
-- user-owned or unrelated worktree changes that must remain untouched.
+只检查实施所需的入口、当前行为、职责模块、符号、schema、配置、生成来源、依赖、测试惯例和用户已有修改。文档代码基线过期时重核受影响范围；无关变化不阻断。
 
-Treat runtime code, declarative configuration, schemas, generators, infrastructure definitions, and tests as possible authoritative implementation sources. Treat README files, comments, examples, and historical documents as supporting evidence.
+本步骤完成条件：项目一致；CodeGraph 路由已完成或明确不适用；每项规范性内容都有足够的当前证据选择实施位置，或已有精确阻断说明。
 
-When the document records a code baseline (branch, commit, version, or analysis time) that no longer matches the current code, mark the baseline stale and re-verify the documented claims against the current code at every location the requirements touch; report the stale baseline and its resolution in the final report. Block only work whose relevant code actually changed or whose impact cannot be determined — unrelated commits do not block.
+### 3. 解决材料关系与冲突
 
-Stop when project identity cannot be established or required implementation sources are missing. Explain what was found, what is missing, and which requirements cannot be implemented safely.
+建立跨层映射，确认行为、契约、设计和当前代码兼容。现有项目惯例可以解决非实质选择；会改变行为、公开契约、持久化数据、权限、安全、兼容性、依赖策略或跨模块职责的选择必须由用户裁决。
 
-This step is complete when every requirement has enough current-project evidence to choose an implementation location or has a precise blocker.
+本步骤完成条件：所有材料关系已明确，且没有被静默覆盖的实质冲突。
 
-### 3. Build the implementation trace
+### 4. 建立实施追溯
 
-Split the work into reviewable implementation units. When the document provides a planned file list, requirement trace, or validation targets, import them as the initial trace instead of rebuilding from scratch, and record every deviation from that plan (added, omitted, or relocated files) with its reason. Maintain an internal trace:
+把工作拆成可审查单元。文档已有文件清单、顺序或验证落点时，把它作为候选计划并根据当前代码核验。
 
-| Unit | Requirements | Current evidence | Planned files/symbols | Validation | Status |
-|---|---|---|---|---|---|
+| 实施单元 | 内容编号与类型 | CodeGraph 语义证据 | 直接读取证据 | 计划文件/符号 | 验证 | 索引状态 |
+|---|---|---|---|---|---|---|
 
-Each unit must have:
+每个单元必须有一致的行为或契约变化、至少一个规范性编号、入口与影响面证据、当前项目落点和与风险相称的验证方法。
 
-- one coherent behavior or contract change;
-- at least one requirement ID;
-- evidence for the chosen project location;
-- a validation method proportional to its risk.
+本步骤完成条件：每项范围内规范性内容至少映射一个单元，每个单元由规范性内容和当前语义证据共同支撑。
 
-Keep units scoped to required behavior and follow existing project seams.
+### 5. 实施每个单元
 
-This step is complete when every requirement is covered by at least one unit and every unit is justified by a requirement.
+编辑前确认目标符号当前实现、主要调用者、关键被调用者、接口与实现关系、已有测试、契约数据安全影响，以及文档文件清单是否仍充分。新鲜查询可由修改同一组符号的多个单元复用。
 
-### 4. Gate and implement each unit
+只修改追溯单元需要的文件；在权威层更新代码、声明、生成来源和测试；保留用户已有和无关改动。出现以下情况时重新执行 CodeGraph 探索或降级取证：
 
-Before editing a unit, verify internally:
+- 需要修改计划外文件或新增跨模块依赖；
+- 发现隐藏调用路径或未知消费者；
+- 修改公共接口、持久化结构或关键数据流；
+- 测试失败指向未分析路径；
+- 原计划符号不存在、职责改变或用户及其他进程修改相关代码。
 
-- the requirement is unambiguous enough to implement;
-- the proposed location and dependency direction match the project;
-- the change preserves out-of-scope behavior;
-- any public contract, data, security, migration, or dependency impact is authorized;
-- the planned validation can detect the intended behavior.
+本步骤完成条件：每个已实施单元的代码覆盖全部映射内容；计划偏差和重新查询结果已经进入追溯。
 
-Proceed autonomously when project conventions resolve non-material choices. Pause under the decision rule when they do not.
+### 6. 编辑后影响面审计
 
-During implementation:
+在增量索引达到可用状态后重新查询关键修改符号，检查调用者、实现关系、依赖方向和实际修改范围。对过期或未索引文件直接读取，比较计划文件与实际文件，并记录新增、遗漏或迁移原因。
 
-- modify only files required by traced units;
-- reuse established types, utilities, services, components, and conventions;
-- keep current-state and target-state assumptions visible in code and tests;
-- update tests and generated or declarative sources at their authoritative layer;
-- preserve unrelated user changes and avoid broad mechanical rewrites.
+索引无法及时同步时不阻止项目验证；改用直接读取完成可确认部分，并把修改后 CodeGraph 审计限制写入最终报告。
 
-A unit is complete only when its code change and validation coverage match all mapped requirements.
+本步骤完成条件：每个关键修改符号已完成影响面审计，或已有明确的过期、降级和未确认范围。
 
-### 5. Validate from narrow to broad
+### 7. 从窄到宽验证
 
-Run the strongest relevant checks available, starting with the smallest signal that exercises the change:
+依次运行最相关的定向测试或复现、受影响的类型或静态检查、以及与风险相称的更广测试、构建或运行验证。区分实现失败、文档冲突、环境限制和既有失败；修复范围内问题，不掩盖其他失败。
 
-1. targeted tests or focused reproduction;
-2. affected type checking, linting, schema, or static validation;
-3. broader tests or build when proportionate to the change and practical.
+本步骤完成条件：每个实施单元都有独立于 CodeGraph 的验证结果或明确的未验证边界。
 
-If a check fails, determine whether the failure comes from the implementation, the documented requirement, the environment, or a pre-existing condition. Fix in-scope implementation failures. Report environmental and pre-existing failures with evidence rather than masking them.
+### 8. 最终追溯审计
 
-Validation is complete when every implementation unit has a result or an explicit unvalidated boundary.
+确认每个规范性编号已实施、排除或阻断；每个修改文件属于追溯单元；测试来自行为、契约或设计；文档和代码基线仍有效；CodeGraph-first、降级和修改后影响审计均已记录；没有任务产生的无关修改；版本控制行为符合当前对话授权。
 
-### 6. Perform the final trace audit
+语义影响审计和项目验证都完成且没有核心阻塞时才能选择 `SUCCESS`。其他情况据实选择 `PARTIAL` 或 `BLOCKED`。
 
-Before reporting completion, confirm:
+## 审查边界
 
-- every `REQ-nnn` is implemented, excluded by the source, or explicitly blocked;
-- every modified file belongs to a traced unit;
-- tests and validation assertions reflect the document rather than invented requirements;
-- no project, document, or code baseline changed in a way that invalidates the analysis;
-- the working tree contains no accidental files or unrelated modifications created by the task;
-- no commit, push, tag, or other version-control publication was performed unless the user explicitly instructed it after reviewing the changes.
+本 skill 在最终追溯审计、验证和交付后结束。不得在完成后自动启动子 agent、独立审查实例或额外审查循环，也不得把外部审查作为 `SUCCESS` 的条件。
 
-If the document or relevant code changed during implementation, refresh the affected trace and validation before completion.
+是否审查由使用者在交付后自行决定。需要审查时，在新的 agent 或 task 中单独发起，并提供最终 diff、相关规范性材料和验证结果；审查过程及结论不由本 skill 自动创建、等待或闭环。
 
-## Final report
-
-Report concisely:
+## 最终回复
 
 ```text
-Implementation result:
-- Document baseline:
-- Document review status and resulting confidence limit:
-- Code baseline:
-- Requirements implemented:
-- Requirements blocked or excluded:
-- Modified files:
-- Deviation from documented plan: planned vs actually changed files, with a reason per addition, omission, or relocation (or "no planned file list in source document")
-- Validation performed and results:
-- Version control state: changes left uncommitted in the working tree awaiting manual review / commit or push performed per explicit user instruction (quote it):
-- Unvalidated boundaries or known limitations:
+实施结果：SUCCESS / PARTIAL / BLOCKED
+- 文档与对话基线：
+- 代码基线：
+- CodeGraph：编辑前/编辑后路由状态、目标索引根目录与新鲜度限制
+- 已实施编号（含内容类型）：
+- 阻断、排除或未完成编号：
+- 修改文件：
+- 与文档文件计划的偏差及原因：
+- 影响面审计：
+- 验证及结果：
+- 版本控制状态：未提交 / 已按当前对话明确指令 commit 或 push
+- 后续审查：未自动执行；是否另开 agent 由使用者决定
+- 未验证边界或已知限制：
 ```
 
-Claim only behavior demonstrated by the resulting code and available validation.
+只声明由最终代码、语义影响审计和已运行验证共同证明的行为。
