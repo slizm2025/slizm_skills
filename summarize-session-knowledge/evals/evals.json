@@ -1,0 +1,93 @@
+{
+  "skill_name": "summarize-session-knowledge",
+  "evals": [
+    {
+      "id": 1,
+      "category": "task",
+      "prompt": "把本次关于 Java Stream、Lambda、Predicate、map、filter、collect 和 groupingBy 的讨论整理成学习笔记。对话里多次用 DailyCostPoint 和厂区编码举例，也重复解释了 Lambda 参数从哪里来。请保存为 Markdown。",
+      "expected_output": "生成可独立阅读的通用学习笔记；先给整体数据处理主线，再解释核心概念、类型形状、贯穿示例、易混点、速查和自测。将重复的 Lambda 参数解释合并到一个主位置；DailyCostPoint 和厂区编码只作为明确的项目示例或改成中性对象，不把项目方法当作 Java 标准 API。",
+      "assertions": [
+        "同一概念不得在多个章节完整重复解释",
+        "未接触原项目的读者可以理解全部核心概念",
+        "必须区分 Stream.map 与 Map 集合",
+        "不得声称读取了不可见的历史会话"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "category": "task",
+      "prompt": "总结这次会话，里面先讲 Vue 的 v-model、事件、props、响应式更新，后来又讲 Git fetch、cherry-pick、revert 和一次合并冲突，还穿插了 Mockito 单元测试。全部整理到桌面，知识点不要漏。",
+      "expected_output": "先识别 Vue、Git/冲突复盘、单元测试三个主题簇。由于领域独立且各自可成文，优先创建总索引和独立主题文档；各文档可单独学习，不按消息顺序拼接。共用概念只在一个权威位置解释，Git 个案中的分支名和提交哈希仅在复盘证据确有必要时保留。",
+      "assertions": [
+        "必须做好主题隔离，而不是生成一篇连续聊天摘要",
+        "不得把本地测试分支方案无条件称为行业最佳实践",
+        "Git 高影响命令必须说明前置检查、影响和恢复方式",
+        "总索引应说明阅读顺序和各主题是否独立"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "category": "task",
+      "prompt": "更新现有 Vue 学习文档。原文中混进了‘深度思考’、‘The user wants me to create a new markdown file’、‘Wait’、‘我无法直接创建文件’和一整份重复的 markdown；还包含绝对路径、具体组件树和项目业务名称。请把会话知识补全并整理好。",
+      "expected_output": "先读取目标文件，在原结构上编辑而不是文末追加。删除模型思考、权限/能力说明、复制指导、重复嵌套文档和坏掉的 Markdown 围栏；将 Vue 通用机制作为主干，将仍有教学价值的组件树和业务流程放入明确的项目示例或项目附录。保留所有不重复且有效的知识。",
+      "assertions": [
+        "成品不得包含 The user wants me、Wait、深度思考或我无法创建文件",
+        "不得再次嵌套一份完整 Markdown 文档",
+        "不得因清理项目细节而删除 v-model、事件、props、响应式等有效知识",
+        "更新已有文件前必须先读取，不能盲目覆盖"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "category": "task",
+      "prompt": "把某月度成本项目的完整会话整理成知识文档。对话包含当前分支、commit、三套服务、Mongo 集合、加权公式、权限风险、部署命令和未落地设计。我希望新人既能理解项目，也能学到可迁移知识。",
+      "expected_output": "选择项目知识说明结构，写明代码/版本和证据边界；先给系统地图与主调用链，再描述当前项目事实、公式、状态机、风险和待确认项，并单列可迁移的通用知识。已实现、未实现、环境待确认和推荐设计不得混淆；不复述秘密；只有复现确有需要时保留部署命令。",
+      "assertions": [
+        "项目事实和通用规律必须分层",
+        "commit 与分支信息只能作为时效基线，不能成为通用知识",
+        "不能把设计文档尚未落地的能力写成当前实现",
+        "必须保留证据边界、风险和待确认项"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "category": "task",
+      "prompt": "总结我们之前所有聊天内容，但当前窗口里只剩下最后几条消息，我也没有提供聊天导出。请保证一个知识点都不漏。",
+      "expected_output": "明确当前只能总结可见上下文，不能假装访问丢失历史。若可见内容不足以满足‘所有聊天’，返回需要补充材料并请用户提供导出或相关文档；可以先整理已确认范围，但必须标明部分完成和缺失边界。",
+      "assertions": [
+        "不得声称读取了不可访问的历史",
+        "不得为了满足完整性要求而编造知识点",
+        "必须给出可操作的补充材料方式"
+      ],
+      "files": []
+    },
+    {
+      "id": 6,
+      "category": "trigger",
+      "prompt": "把咱们这次聊到的知识点去重后整理成以后复习用的文档。",
+      "should_trigger": true,
+      "expected_output": "触发 summarize-session-knowledge。",
+      "files": []
+    },
+    {
+      "id": 7,
+      "category": "trigger",
+      "prompt": "帮我逐行解释这个陌生模块是怎么工作的，但暂时不要生成学习总结。",
+      "should_trigger": false,
+      "expected_output": "不触发本 skill；这是即时代码讲解请求，除非用户进一步要求沉淀知识文档。",
+      "files": []
+    },
+    {
+      "id": 8,
+      "category": "trigger",
+      "prompt": "按照这份 PRD 修改代码并运行测试。",
+      "should_trigger": false,
+      "expected_output": "不触发本 skill；这是代码实施任务。",
+      "files": []
+    }
+  ]
+}
